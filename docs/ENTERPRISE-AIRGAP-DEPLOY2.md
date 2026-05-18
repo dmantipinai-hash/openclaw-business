@@ -446,7 +446,55 @@ OpenClaw уже имеет file logging и security audit. Для enterprise э�
 
 ---
 
-## 17. Минимальный MVP для бизнеса
+## 17. Матрица реализации (3 колонки)
+
+Ниже — та самая раскладка, которую имеет смысл держать как рабочую карту.
+
+**Важно:** галочка в этой секции означает не «уже реализовано в продукте под enterprise из коробки», а:
+
+- пункт подтверждён по текущему репозиторию OpenClaw;
+- он **не противоречит архитектуре**;
+- его можно брать как реалистичный baseline без большой переделки;
+- я специально отметил самые простые ограничения, которые уже можно внедрять как первую волну hardening.
+
+| Уже есть в OpenClaw | Можно внедрить без большой переделки | Требует отдельной доработки / отдельного бизнес-ТЗ |
+|---|---|---|
+| `gateway.auth.mode: "trusted-proxy"`, `trustedProxies`, отдельная документация по trusted proxy auth | [x] **Ограничить ingress**: loopback по умолчанию или private reverse proxy вместо публичного internet ingress | [ ] Полноценная enterprise SSO-обвязка с корпоративными ролями и жизненным циклом пользователей |
+| Поддержка self-hosted/local models: `ollama`, `vllm`, OpenAI-compatible endpoints | [x] **Перевести модель на внутренний inference provider** вместо публичных SaaS | [ ] Единый внутренний inference gateway с SLA, quota, chargeback и multi-tenant governance |
+| `openclaw security audit`, `--deep`, `--fix`, security docs и check catalog | [x] **Сделать security audit baseline** обязательной частью пилота и эксплуатации | [ ] Автоматизированная compliance-обвязка, отдельные security dashboards и policy-as-code поверх аудита |
+| Tool policy: `tools.profile`, `tools.allow`, `tools.deny`, per-sender/per-provider restrictions | [x] **Сделать deny-by-default tool baseline**: отключить лишние web/UI/automation surfaces для enterprise-пилота | [ ] Тонкая RBAC/ABAC-модель по отделам, бизнес-ролям и операциям |
+| Sandbox: `agents.defaults.sandbox.*`, `workspaceAccess`, `docker.network`, `non-main/all` | [x] **Включить sandbox для рискованных сессий** и ограничить workspace access | [ ] Жёстко профилированные песочницы под разные бизнес-домены и утверждённые execution classes |
+| Workspace/file guardrails: `tools.exec.applyPatch.workspaceOnly`, `tools.fs.workspaceOnly` | [x] **Ограничить файловую поверхность** workspace-only guardrails там, где это допустимо | [ ] Политика классификации данных, связанная с DLP и разграничением наборов документов |
+| Поддержка внутренних каналов и политик доступа: Matrix, Mattermost, allowlist/groupPolicy/dmPolicy | [x] **Оставить только внутренние каналы** и fail-closed allowlist policy для DM/group access | [ ] Полноценная омниканальная enterprise-маршрутизация с едиными профилями доступа и согласованием с ИБ |
+| Logging/redaction/OTEL surfaces уже предусмотрены в архитектуре | [x] **Включить file logs + redaction + внутренний log shipping** как минимальный baseline | [ ] Полноценный SOC/SIEM pipeline с расследованиями, ретеншном, legal hold и e-discovery |
+| `NODE_EXTRA_CA_CERTS` и startup TLS trust path есть в коде/тестах | [x] **Зафиксировать доверие к внутренним CA** как обязательное требование контура | [ ] Централизованная PKI/onboarding-автоматизация хостов и контейнеров |
+| `channels.matrix`, `channels.mattermost`, allowlist, mention gating, internal proxy options | [x] **Стартовать с read-only/internal messaging model** вместо публичных каналов и внешних ботов | [ ] Глубокая бизнес-интеграция каналов с approval workflows и корпоративными политиками хранения |
+| `memorySearch`, extra paths, remote/local providers, knowledge-oriented config surfaces | [x] **Ограничить knowledge scope** только разрешёнными документами и внутренними источниками | [ ] Полноценный enterprise RAG с коллекциями по подразделениям, ACL и data residency policy |
+| Общая архитектура OpenClaw допускает безопасный read-only first rollout | [x] **Запускать пилот в режиме Read-only / Draft first** | [ ] Write-actions with approvals, DLP на исходящие сообщения и безопасные бизнес-операции поверх API |
+
+### Что именно я пометил как «самое простое» и уже зафиксировал в baseline
+
+Ниже — 8 пунктов из прошлого ответа, которые выглядят реалистично **без большой переделки** и уже отражены в этом документе как рекомендуемый baseline:
+
+- [x] закрытый deployment с внутренним LLM;
+- [x] trusted-proxy + SSO на прокси;
+- [x] ограничение network exposure;
+- [x] security audit как baseline;
+- [x] отключение/ограничение опасных tools;
+- [x] работа только с внутренними каналами;
+- [x] доверие к внутренним CA через `NODE_EXTRA_CA_CERTS`;
+- [x] read-only стартовый режим.
+
+### Что я сделал в рамках этой задачи
+
+- [x] перепроверил эти пункты по репозиторию `openclaw-business` и локальным докам проекта;
+- [x] отделил реальные текущие возможности от enterprise-пожеланий;
+- [x] разложил `ENTERPRISE-AIRGAP-DEPLOY2.md` на 3 практические корзины: already exists / config+infra / needs dev;
+- [x] отметил галочками только то, что выглядит как безопасный и реалистичный baseline без большой переделки.
+
+---
+
+## 18. Минимальный MVP для бизнеса
 
 Если делать не «идеальный enterprise forever», а реальный первый этап, я бы предложил такой scope.
 
@@ -484,7 +532,7 @@ OpenClaw уже имеет file logging и security audit. Для enterprise э�
 
 ---
 
-## 18. Чек-лист готовности к production
+## 19. Чек-лист готовности к production
 
 Систему нельзя считать готовой к enterprise rollout, пока не подтверждено следующее:
 
@@ -515,7 +563,7 @@ OpenClaw уже имеет file logging и security audit. Для enterprise э�
 
 ---
 
-## 19. Рекомендуемая формулировка бизнес-ТЗ
+## 20. Рекомендуемая формулировка бизнес-ТЗ
 
 Если сжать всё в короткое ТЗ, я бы предложил такую редакцию:
 
@@ -523,7 +571,7 @@ OpenClaw уже имеет file logging и security audit. Для enterprise э�
 
 ---
 
-## 20. Что я бы предложил делать дальше
+## 21. Что я бы предложил делать дальше
 
 Следующий полезный шаг — не сразу кодить, а разбить работу на 3 артефакта:
 
@@ -546,7 +594,7 @@ OpenClaw уже имеет file logging и security audit. Для enterprise э�
 
 ---
 
-## 21. Вывод
+## 22. Вывод
 
 Исходный файл был полезен как brainstorming, но для бизнеса важнее не список модных слов, а чёткая связка:
 
