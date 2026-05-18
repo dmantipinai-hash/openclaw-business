@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenClaw Compliance Audit Entry",
+  "description": "Формат записи для отправки в Compliance Server. Используется log-shipper.",
+  "type": "object",
+  "required": ["timestamp", "type", "source"],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp события"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Идентификатор пользователя (из auth слоя)"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "ID сессии OpenClaw"
+    },
+    "agent_id": {
+      "type": "string",
+      "description": "ID агента (main, subagent и т.д.)",
+      "default": "main"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "user_message",
+        "agent_response",
+        "tool_call",
+        "tool_result",
+        "file_operation",
+        "exec_command",
+        "agent_spawn",
+        "kill_operation",
+        "config_change",
+        "raw_log",
+        "unknown"
+      ],
+      "description": "Тип события"
+    },
+    "tool": {
+      "type": "string",
+      "description": "Название инструмента (для tool_call)"
+    },
+    "input_summary": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Краткое описание входных данных (без полного содержимого)"
+    },
+    "output_summary": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Краткое описание результата"
+    },
+    "exec_command": {
+      "type": "string",
+      "description": "Выполненная команда (для exec_command)"
+    },
+    "duration_ms": {
+      "type": "integer",
+      "description": "Длительность выполнения в миллисекундах"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "Оценка уровня риска"
+    },
+    "source": {
+      "type": "string",
+      "description": "Источник (gateway hostname)"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "Файл лога откуда прочитано"
+    }
+  }
+}

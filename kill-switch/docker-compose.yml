@@ -1,0 +1,49 @@
+# Kill Switch — Docker Compose
+# Запуск на ОТДЕЛЬНОЙ машине от OpenClaw Gateway!
+#
+# Использование:
+#   1. cp gateways.json.example gateways.json
+#   2. nano gateways.json  # настроить список Gateway-хостов
+#   3. docker compose up -d
+#   4. Открыть http://localhost:8080
+
+services:
+  # Watchdog — Python backend, опрашивает Gateway
+  watchdog:
+    build: ./watchdog
+    container_name: kill-switch-watchdog
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Moscow}
+    volumes:
+      - ./gateways.json:/etc/kill-switch/gateways.json:ro
+      - kill-switch-logs:/var/log/kill-switch
+    networks:
+      - kill-switch-internal
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/status')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Dashboard — nginx + статический HTML
+  dashboard:
+    image: nginx:alpine
+    container_name: kill-switch-dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-8080}:8080"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - watchdog
+    networks:
+      - kill-switch-internal
+
+networks:
+  kill-switch-internal:
+    driver: bridge
+
+volumes:
+  kill-switch-logs:

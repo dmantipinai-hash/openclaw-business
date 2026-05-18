@@ -1,0 +1,191 @@
+{
+  // ╔══════════════════════════════════════════════════════════════════════╗
+  // ║  OpenClaw Enterprise Air-Gap Baseline Config                       ║
+  // ║  Все 8 функций безопасности в одном файле                          ║
+  // ║  Скопируй в ~/.openclaw/openclaw.json и поправь плейсхолдеры       ║
+  // ╚══════════════════════════════════════════════════════════════════════╝
+
+  // ─── ФИЧА 1: Внутренний LLM (Ollama) ─────────────────────────────────
+  // Единственный провайдер — Ollama внутри контура.
+  // Никаких OpenAI, Anthropic, Google.
+  // Для Docker: baseUrl = "http://ollama:11434"
+  // Для нативного теста: baseUrl = "http://localhost:11434"
+  models: {
+    mode: "merge",
+    providers: {
+      ollama: {
+        baseUrl: "http://localhost:11434/v1", // ← заменить на внутренний адрес
+        apiKey: "ollama",
+        api: "openai-completions",
+        models: [
+          {
+            id: "llama3.1:8b",
+            name: "Llama 3.1 8B (Local)",
+            reasoning: false,
+            input: ["text"],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+            contextWindow: 131072,
+            maxTokens: 4096,
+          },
+        ],
+      },
+    },
+  },
+
+  agents: {
+    defaults: {
+      workspace: "~/.openclaw/workspace",
+      // Единственная модель — Ollama, никаких fallback на внешние API
+      model: {
+        primary: "ollama/llama3.1:8b", // ← заменить на доступную модель
+        fallbacks: [],
+      },
+    },
+  },
+
+  // ─── ФИЧА 2: Trusted-proxy + SSO на прокси ──────────────────────────
+  // Gateway доверяет только reverse proxy (Keycloak/Authentik/nginx+oauth).
+  // Прямой доступ к Gateway в обход прокси = запрещён.
+  //
+  // ⚠️ Для теста без прокси: раскомментируй строку ниже и закомментируй
+  //    секцию auth.trustedProxy:
+  //    auth: { mode: "token" },
+  //    и задай OPENCLAW_GATEWAY_TOKEN в .env
+  gateway: {
+    bind: "loopback",     // Только localhost
+    port: 18789,
+
+    // IP-адрес reverse proxy (добавить свои)
+    trustedProxies: ["127.0.0.1"],
+
+    auth: {
+      mode: "trusted-proxy",
+      trustedProxy: {
+        userHeader: "X-Forwarded-User",
+        requiredHeaders: ["X-Forwarded-For", "X-Forwarded-Proto"],
+        allowUsers: [],         // пусто = все аутентифицированные через прокси
+        allowLoopback: false,
+      },
+    },
+
+    // Web UI origins (добавить URL своего прокси)
+    controlUi: {
+      allowedOrigins: [],  // ← добавить, например ["https://openclaw.company.local"]
+    },
+  },
+
+  // ─── ФИЧА 3: Ограничение network exposure ───────────────────────────
+  // bind: "loopback" выше уже ограничивает listening
+  // Дополнительно — никаких внешних HTTP endpoints
+  http: {
+    endpoints: {
+      chatCompletions: { enabled: false },
+      responses: { enabled: false },
+    },
+  },
+
+  // ─── ФИЧА 4: Security audit как baseline ────────────────────────────
+  logging: {
+    level: "info",
+    consoleLevel: "warn",
+    redactSensitive: "tools",  // Маскировка секретов в логах
+  },
+
+  // ─── ФИЧА 5: Отключение опасных tools ───────────────────────────────
+  // Deny-by-default: запрещены ВСЕ опасные инструменты.
+  // Разрешены только read-only операции.
+  tools: {
+    profile: "minimal",
+
+    // Жёсткий deny-list — даже если profile поменяют
+    deny: [
+      "web_search",
+      "x_search",
+      "web_fetch",
+      "browser",
+      "canvas",
+      "computer_use",
+      "image_generate",
+      "video_generate",
+      "music_generate",
+      "tts",
+    ],
+
+    // Для всех отправителей — запрет на запись/исполнение
+    toolsBySender: {
+      "*": {
+        deny: ["exec", "process", "write", "edit", "apply_patch", "sessions_spawn"],
+      },
+    },
+
+    // Дополнительные ограничения exec
+    exec: {
+      applyPatch: { enabled: false },
+    },
+
+    // Блокировка web инструментов
+    web: {
+      search: { enabled: false },
+      fetch: { enabled: false },
+    },
+
+    // Elevated access — выключен
+    elevated: { enabled: false },
+  },
+
+  // ─── ФИЧА 6: Только внутренние каналы ──────────────────────────────
+  // ВСЕ внешние каналы — выключены.
+  // Работает ТОЛЬКО Web UI (через reverse proxy).
+  channels: {
+    // Явно отключаем внешние каналы
+    whatsapp: { enabled: false },
+    telegram: { enabled: false },
+    discord: { enabled: false },
+    signal: { enabled: false },
+    slack: { enabled: false },
+    imessage: { enabled: false },
+
+    // Web UI — включён (доступ через reverse proxy)
+    webchat: { enabled: true },
+
+    // Matrix — выключен по умолчанию (включить если развёрнут в контуре)
+    matrix: { enabled: false },
+
+    // Политика по умолчанию — закрытая
+    defaults: {
+      groupPolicy: "disabled",
+      dmPolicy: "allowlist",
+    },
+  },
+
+  // ─── ФИЧА 7: CA сертификаты ────────────────────────────────────────
+  // NODE_EXTRA_CA_CERTS задаётся через переменную окружения:
+  //   export NODE_EXTRA_CA_CERTS=/path/to/ca-certificates.pem
+  // В Docker: через environment в docker-compose.airgap.yml
+  // В Windows: set NODE_EXTRA_CA_CERTS=C:\certs\ca-certificates.pem
+  // (см. .env.example)
+
+  // ─── ФИЧА 8: Read-only стартовый режим ─────────────────────────────
+  // Все пишущие инструменты уже запрещены в tools.toolsBySender выше.
+  // Дополнительно — sandbox в read-only режиме.
+  agents_defaults_sandbox: {
+    enabled: true,
+    workspaceAccess: "workspace-only",
+  },
+
+  // Сессия — ежедневный сброс, изоляция по отправителю
+  session: {
+    scope: "per-sender",
+    dmScope: "per-channel-peer",
+    reset: {
+      mode: "daily",
+      atHour: 4,
+      idleMinutes: 60,
+    },
+    resetTriggers: ["/new", "/reset"],
+  },
+
+  messages: {
+    visibleReplies: "automatic",
+  },
+}

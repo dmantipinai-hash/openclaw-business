@@ -1,0 +1,147 @@
+{
+  "$schema": "https://openclaw.ai/config.schema.json",
+  "_comment": "Enterprise air-gap config. Place at ~/.openclaw/openclaw.json on the gateway host.",
+
+  "gateway": {
+    "bind": "loopback",
+    "port": 18789,
+
+    "trustedProxies": ["10.0.0.1"],
+
+    "auth": {
+      "mode": "trusted-proxy",
+      "trustedProxy": {
+        "userHeader": "x-forwarded-user",
+        "requiredHeaders": ["x-forwarded-proto", "x-forwarded-host"],
+        "allowUsers": [],
+        "allowLoopback": false
+      }
+    },
+
+    "controlUi": {
+      "allowedOrigins": []
+    }
+  },
+
+  "agents": {
+    "defaults": {
+      "workspace": "~/.openclaw/workspace",
+
+      "model": {
+        "primary": "ollama/llama3.1:70b",
+        "fallbacks": []
+      },
+
+      "sandbox": {
+        "enabled": true,
+        "workspaceAccess": "workspace-only"
+      }
+    }
+  },
+
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "ollama": {
+        "baseUrl": "http://host.docker.internal:11434/v1",
+        "apiKey": "ollama",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "llama3.1:70b",
+            "name": "Llama 3.1 70B (Local)",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 131072,
+            "maxTokens": 4096
+          }
+        ]
+      }
+    }
+  },
+
+  "tools": {
+    "profile": "minimal",
+
+    "deny": [
+      "web_search",
+      "x_search",
+      "web_fetch",
+      "browser",
+      "canvas",
+      "computer_use",
+      "image_generate",
+      "video_generate",
+      "music_generate",
+      "tts"
+    ],
+
+    "toolsBySender": {
+      "*": {
+        "deny": ["exec", "process", "write", "edit", "apply_patch", "sessions_spawn"]
+      }
+    },
+
+    "exec": {
+      "applyPatch": {
+        "enabled": false
+      }
+    },
+
+    "web": {
+      "search": {
+        "enabled": false
+      },
+      "fetch": {
+        "enabled": false
+      }
+    },
+
+    "elevated": {
+      "enabled": false
+    }
+  },
+
+  "channels": {
+    "whatsapp": { "enabled": false },
+    "telegram": { "enabled": false },
+    "discord":  { "enabled": false },
+    "signal":   { "enabled": false },
+    "slack":    { "enabled": false },
+    "imessage": { "enabled": false },
+
+    "webchat": {
+      "enabled": true
+    },
+
+    "matrix": {
+      "enabled": false
+    },
+
+    "defaults": {
+      "groupPolicy": "disabled",
+      "dmPolicy": "allowlist"
+    }
+  },
+
+  "session": {
+    "scope": "per-sender",
+    "dmScope": "per-channel-peer",
+    "reset": {
+      "mode": "daily",
+      "atHour": 4,
+      "idleMinutes": 60
+    }
+  },
+
+  "logging": {
+    "level": "info",
+    "consoleLevel": "warn",
+    "redactSensitive": "tools"
+  },
+
+  "messages": {
+    "visibleReplies": "automatic"
+  }
+}

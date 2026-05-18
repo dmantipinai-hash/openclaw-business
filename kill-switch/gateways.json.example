@@ -1,0 +1,25 @@
+{
+  "gateways": [
+    {
+      "name": "Gateway-1 (пример)",
+      "host": "10.0.0.10",
+      "port": 18789,
+      "token": "change-me",
+      "dockerHost": "10.0.0.10",
+      "dockerPort": 2375,
+      "sshUser": null,
+      "sshKey": null
+    }
+  ],
+  "pollIntervalMs": 10000,
+  "killTimeoutMs": 10000,
+  "logPath": "/var/log/kill-switch/operations.log",
+  "dashboard": {
+    "port": 8080,
+    "auth": {
+      "enabled": true,
+      "username": "admin",
+      "passwordHash": "CHANGE_ME"
+    }
+  }
+}

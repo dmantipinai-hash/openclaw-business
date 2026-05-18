@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kill Switch — OpenClaw Emergency Control</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <span class="logo">🛑</span>
+            <h1>Kill Switch</h1>
+            <span class="subtitle">OpenClaw Emergency Control</span>
+        </div>
+        <div class="header-right">
+            <span id="lastUpdate" class="last-update">Обновление...</span>
+            <span id="connectionStatus" class="status-dot alive" title="Watchdog подключён"></span>
+        </div>
+    </header>
+
+    <main>
+        <!-- EMERGENCY кнопка -->
+        <section class="emergency-section">
+            <div class="emergency-card">
+                <div class="emergency-icon">⚠️</div>
+                <h2>EMERGENCY KILL ALL</h2>
+                <p>Остановить ВСЕ Gateway и ВСЕХ агентов на всех хостах</p>
+                <button id="killAllBtn" class="btn-emergency" onclick="emergencyKillAll()">
+                    🛑 ОСТАНОВИТЬ ВСЕХ
+                </button>
+            </div>
+        </section>
+
+        <!-- Сводка -->
+        <section class="stats-section">
+            <div class="stat-card" id="statTotal">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Gateway всего</div>
+            </div>
+            <div class="stat-card" id="statAlive">
+                <div class="stat-value green">0</div>
+                <div class="stat-label">Активных</div>
+            </div>
+            <div class="stat-card" id="statDead">
+                <div class="stat-value red">0</div>
+                <div class="stat-label">Недоступных</div>
+            </div>
+            <div class="stat-card" id="statAgents">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Агентов</div>
+            </div>
+            <div class="stat-card" id="statSessions">
+                <div class="stat-value">0</div>
+                <div class="stat-label">Сессий</div>
+            </div>
+        </section>
+
+        <!-- Таблица Gateway -->
+        <section class="gateways-section">
+            <h2>Gateway-хосты</h2>
+            <div id="gatewaysList"></div>
+        </section>
+
+        <!-- Журнал операций -->
+        <section class="logs-section">
+            <h2>Журнал операций</h2>
+            <div class="logs-header">
+                <button class="btn-small" onclick="refreshLogs()">🔄 Обновить</button>
+            </div>
+            <div id="logsList" class="logs-list"></div>
+        </section>
+    </main>
+
+    <!-- Модальное окно подтверждения -->
+    <div id="confirmModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h3 id="confirmTitle">Подтверждение</h3>
+            <p id="confirmMessage"></p>
+            <div class="confirm-input-group" id="confirmInputGroup">
+                <label>Введите <strong id="confirmWord"></strong> для подтверждения:</label>
+                <input type="text" id="confirmInput" autocomplete="off">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-danger" id="confirmYes" onclick="confirmAction()">Подтвердить</button>
+                <button class="btn-cancel" onclick="hideModal()">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

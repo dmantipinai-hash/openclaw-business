@@ -1,0 +1,23 @@
+# Enterprise Strict — комплаенс-зоны, конфиденциальные данные
+# Deny-all, разрешено только чтение и поиск по памяти
+# Для: юридический, финансовый, HR отделы
+
+tools:
+  profile: "deny-all"
+  allow:
+    - read            # чтение файлов (workspace-only)
+    - memory_search   # поиск по памяти
+    - memory_get      # чтение из памяти
+  deny:
+    - web_search
+    - web_fetch
+    - exec
+    - edit
+    - write
+    - browser
+    - image_generate
+    - sessions_spawn
+  fs:
+    workspaceOnly: true
+  exec:
+    disabled: true
