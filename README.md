@@ -119,4 +119,10 @@ cat workspace/ENTERPRISE-WELCOME.md
 
 ---
 
-*Основан на [OpenClaw](https://github.com/openclaw/openclaw) — персональном AI-ассистенте с открытым исходным кодом.*
+## Attribution
+
+This project is based on [OpenClaw](https://github.com/openclaw/openclaw) by Peter Steinberger.
+Original project: https://github.com/openclaw/openclaw
+License: MIT (see [LICENSE](LICENSE))
+
+Enterprise deployment kit, Kill Switch, Tool Policy profiles, and Compliance Logging are original additions and not part of the upstream OpenClaw project.
