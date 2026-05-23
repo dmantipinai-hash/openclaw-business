@@ -1,0 +1,54 @@
+name: Security Tests
+
+on:
+  push:
+    paths:
+      - 'configs/**'
+      - 'security-tests/**'
+      - 'kill-switch/**'
+      - 'setup-wizard/**'
+      - 'output/**'
+  pull_request:
+    paths:
+      - 'configs/**'
+      - 'security-tests/**'
+      - 'kill-switch/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Make scripts executable
+        run: chmod +x security-tests/run-tests.sh setup-wizard/setup.sh setup-wizard/validate.sh
+
+      - name: Generate test config (non-interactive)
+        run: |
+          ./setup-wizard/setup.sh \
+            --non-interactive \
+            --llm ollama \
+            --llm-url http://localhost:11434/v1 \
+            --llm-model llama3.1:8b \
+            --policy strict \
+            --auth token \
+            --killswitch \
+            --no-docker
+
+      - name: Run setup wizard validator
+        run: ./setup-wizard/validate.sh ./output/ || true
+
+      - name: Run security tests
+        run: ./security-tests/run-tests.sh ./output/ markdown
+
+      - name: Upload security report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: output/security-report.md
+          retention-days: 30

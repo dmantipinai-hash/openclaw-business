@@ -1,0 +1,169 @@
+# Security Test Checks — Enterprise OpenClaw
+# Каждая проверка: id, категория, важность, описание, тест-функция, параметры
+#
+# Важность:
+#   critical — блокирует запуск (FAIL = стоп)
+#   high     — серьёзная проблема (FAIL = предупреждение)
+#   medium   — желательно исправить
+#   low      — информационно
+
+checks:
+  # ─── Tool Policy ──────────────────────────────────────────────
+  - id: tool-policy-exists
+    category: tool_policy
+    severity: critical
+    description: "Tool policy файл существует"
+    test: "file_exists"
+    params:
+      file: "tool-policy.yaml"
+
+  - id: tool-policy-deny-all
+    category: tool_policy
+    severity: critical
+    description: "Профиль deny-all (whitelist-подход)"
+    test: "yaml_contains"
+    params:
+      file: "tool-policy.yaml"
+      path: "tools.profile"
+      value: "deny-all"
+
+  - id: tool-policy-web-search-blocked
+    category: tool_policy
+    severity: critical
+    description: "web_search заблокирован"
+    test: "yaml_in_list"
+    params:
+      file: "tool-policy.yaml"
+      path: "tools.deny"
+      value: "web_search"
+
+  - id: tool-policy-web-fetch-blocked
+    category: tool_policy
+    severity: critical
+    description: "web_fetch заблокирован или ограничен"
+    test: "tool_blocked_or_restricted"
+    params:
+      file: "tool-policy.yaml"
+      tool: "web_fetch"
+
+  - id: tool-policy-browser-blocked
+    category: tool_policy
+    severity: critical
+    description: "browser заблокирован"
+    test: "yaml_in_list"
+    params:
+      file: "tool-policy.yaml"
+      path: "tools.deny"
+      value: "browser"
+
+  - id: tool-policy-exec-restricted
+    category: tool_policy
+    severity: high
+    description: "exec ограничен (disabled или sandboxed)"
+    test: "exec_restricted"
+    params:
+      file: "tool-policy.yaml"
+
+  - id: tool-policy-fs-workspace-only
+    category: tool_policy
+    severity: high
+    description: "Файловая система ограничена workspace"
+    test: "yaml_contains"
+    params:
+      file: "tool-policy.yaml"
+      path: "tools.fs.workspaceOnly"
+      value: true
+
+  # ─── Gateway Config ───────────────────────────────────────────
+  - id: gateway-config-exists
+    category: gateway
+    severity: critical
+    description: "gateway.json5 существует"
+    test: "file_exists"
+    params:
+      file: "gateway.json5"
+
+  - id: gateway-bind-not-public
+    category: gateway
+    severity: critical
+    description: "Gateway не привязан к 0.0.0.0"
+    test: "gateway_bind_check"
+
+  - id: gateway-has-auth
+    category: gateway
+    severity: critical
+    description: "Аутентификация настроена (не 'none')"
+    test: "gateway_auth_check"
+
+  - id: gateway-no-external-llm
+    category: gateway
+    severity: critical
+    description: "Нет внешних LLM провайдеров (openai.com, anthropic.com)"
+    test: "no_external_endpoints"
+
+  - id: gateway-no-placeholders
+    category: gateway
+    severity: high
+    description: "Все плейсхолдеры {{...}} заменены"
+    test: "no_placeholders"
+    params:
+      file: "gateway.json5"
+
+  # ─── Secrets ──────────────────────────────────────────────────
+  - id: no-secrets-in-configs
+    category: secrets
+    severity: critical
+    description: "Нет API-ключей и секретов в конфиг-файлах"
+    test: "no_secrets"
+
+  - id: no-secrets-in-env
+    category: secrets
+    severity: critical
+    description: "Нет хардкоженных секретов в .env"
+    test: "no_secrets_env"
+
+  # ─── Kill Switch ──────────────────────────────────────────────
+  - id: killswitch-configured
+    category: kill_switch
+    severity: high
+    description: "Kill Switch настроен (в docker-compose или .env)"
+    test: "killswitch_configured"
+
+  - id: killswitch-healthcheck
+    category: kill_switch
+    severity: high
+    description: "Watchdog отвечает на healthcheck (если запущен)"
+    test: "killswitch_healthcheck"
+
+  # ─── Docker ───────────────────────────────────────────────────
+  - id: docker-network-internal
+    category: docker
+    severity: critical
+    description: "Docker-сеть internal (no external access)"
+    test: "docker_network_internal"
+
+  - id: docker-no-host-network
+    category: docker
+    severity: high
+    description: "Контейнеры НЕ используют host network"
+    test: "docker_no_host_network"
+
+  - id: docker-security-hardened
+    category: docker
+    severity: medium
+    description: "Security hardening (cap_drop, no-new-privileges, read_only)"
+    test: "docker_security_hardened"
+
+  # ─── Compliance ───────────────────────────────────────────────
+  - id: compliance-config-check
+    category: compliance
+    severity: medium
+    description: "Compliance logging настроен (если требуется)"
+    test: "compliance_check"
+
+  # ─── .env ─────────────────────────────────────────────────────
+  - id: env-no-default-tokens
+    category: secrets
+    severity: high
+    description: "OPENCLAW_GATEWAY_TOKEN не пустой (если auth=token)"
+    test: "env_token_set"
