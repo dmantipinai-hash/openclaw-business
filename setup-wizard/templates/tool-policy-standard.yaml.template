@@ -1,0 +1,28 @@
+# Enterprise Standard — инженерные команды, общие задачи
+# Сгенерировано setup-wizard: {{TIMESTAMP}}
+# Deny-all + whitelist, exec ограничен sandbox
+# Для: разработчики, инженеры, техподдержка
+
+tools:
+  profile: "deny-all"
+  allow:
+    - read
+    - write
+    - edit
+    - exec
+    - memory_search
+    - memory_get
+  deny:
+    - web_search
+    - web_fetch
+    - browser
+    - image_generate
+  exec:
+    applyPatch:
+      workspaceOnly: true
+  fs:
+    workspaceOnly: true
+  agents:
+    defaults:
+      sandbox:
+        mode: "require"

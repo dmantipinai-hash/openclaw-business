@@ -1,0 +1,28 @@
+# Enterprise Sandboxed — автоматизация, CI/CD
+# Сгенерировано setup-wizard: {{TIMESTAMP}}
+# exec разрешён в sandbox, web_fetch только для внутренних доменов
+# Для: CI/CD, интеграции, автоматизация
+
+tools:
+  profile: "deny-all"
+  allow:
+    - read
+    - write
+    - edit
+    - exec
+    - memory_search
+    - memory_get
+    - sessions_spawn
+  deny:
+    - web_search
+    - browser
+    - image_generate
+  web_fetch:
+    allowedDomains:
+      - "{{INTERNAL_DOMAIN_1}}"
+      {{ADDITIONAL_DOMAINS}}
+  agents:
+    defaults:
+      sandbox:
+        mode: "require"
+        workspaceAccess: "workspace-only"

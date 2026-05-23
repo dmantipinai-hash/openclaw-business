@@ -1,0 +1,71 @@
+{
+  // ╔══════════════════════════════════════════════════════════════╗
+  // ║  OpenClaw Enterprise — Auto-generated configuration         ║
+  // ║  Создано setup-wizard/setup.sh                              ║
+  // ║  Дата: {{TIMESTAMP}}                                         ║
+  // ╚══════════════════════════════════════════════════════════════╝
+
+  // ─── LLM Provider ─────────────────────────────────────────────
+  models: {
+    mode: "merge",
+    providers: {
+      {{LLM_PROVIDER_ID}}: {
+        baseUrl: "{{LLM_BASE_URL}}",
+        apiKey: "{{LLM_API_KEY}}",
+        api: "{{LLM_API_FORMAT}}",
+        models: [
+          {
+            id: "{{LLM_MODEL_ID}}",
+            name: "{{LLM_MODEL_NAME}}",
+            reasoning: {{LLM_REASONING}},
+            input: ["text"],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+            contextWindow: {{LLM_CONTEXT_WINDOW}},
+            maxTokens: {{LLM_MAX_TOKENS}},
+          },
+        ],
+      },
+    },
+  },
+
+  agents: {
+    defaults: {
+      workspace: "~/.openclaw/workspace",
+      model: {
+        primary: "{{LLM_PROVIDER_ID}}/{{LLM_MODEL_ID}}",
+        fallbacks: [],
+      },
+      {{SANDBOX_CONFIG}}
+    },
+  },
+
+  // ─── Gateway ──────────────────────────────────────────────────
+  gateway: {
+    bind: "{{GATEWAY_BIND}}",
+    port: {{GATEWAY_PORT}},
+
+    {{TRUSTED_PROXIES_CONFIG}}
+
+    auth: {
+      {{AUTH_CONFIG}}
+    },
+
+    controlUi: {
+      allowedOrigins: [{{ALLOWED_ORIGINS}}],
+    },
+  },
+
+  // ─── Tool Policy ──────────────────────────────────────────────
+  tools: {
+    policyFile: "{{TOOL_POLICY_FILE}}",
+  },
+
+  // ─── Memory ───────────────────────────────────────────────────
+  memory: {
+    enabled: true,
+    maxBytes: 10240,
+  },
+
+  // ─── Compliance Logging ───────────────────────────────────────
+  {{COMPLIANCE_CONFIG}}
+}

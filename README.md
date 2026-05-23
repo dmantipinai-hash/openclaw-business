@@ -15,6 +15,26 @@
 
 ---
 
+## Quick Start (3 команды)
+
+```bash
+git clone https://github.com/dmantipinai-hash/openclaw-business.git
+cd openclaw-business/setup-wizard
+./setup.sh
+```
+
+Мастер задаст 6 вопросов → сгенерирует конфиги → запуск:
+```bash
+cd output && docker compose up -d
+```
+
+Валидация перед запуском:
+```bash
+./validate.sh ./output/
+```
+
+---
+
 ## Что это
 
 Набор шаблонов, прототипов и документации для развёртывания [OpenClaw](https://github.com/openclaw/openclaw) в enterprise-окружении с жёсткими ограничениями безопасности:
