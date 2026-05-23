@@ -1,8 +1,9 @@
 name: Install Smoke
 
 on:
-  schedule:
-    - cron: "17 3 * * *"
+  # schedule disabled — was firing daily on fork without upstream infra
+  # schedule:
+  #   - cron: "17 3 * * *"
   workflow_dispatch:
     inputs:
       run_bun_global_install_smoke:
