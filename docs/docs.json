@@ -967,7 +967,7 @@
             "groups": [
               {
                 "group": "Overview",
-                "pages": ["index", "start/showcase", "concepts/features"]
+                "pages": ["index", "architecture", "start/showcase", "concepts/features"]
               },
               {
                 "group": "First steps",

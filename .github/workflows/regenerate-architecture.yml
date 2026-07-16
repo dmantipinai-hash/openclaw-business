@@ -1,0 +1,47 @@
+name: Regenerate Architecture Docs
+
+on:
+  push:
+    paths:
+      - 'docs/scan.json'
+      - '.github/scripts/scan-to-mermaid.sh'
+      - '.github/scripts/scan-to-svg.sh'
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Install Graphviz
+        run: sudo apt-get install -y graphviz
+
+      - name: Regenerate Mermaid
+        run: bash .github/scripts/scan-to-mermaid.sh
+
+      - name: Regenerate SVG
+        run: bash .github/scripts/scan-to-svg.sh
+
+      - name: Commit and push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add docs/architecture.md docs/architecture.svg
+          git diff --staged --quiet || git commit -m "docs: regenerate architecture from scan.json [skip ci]"
+          git push
